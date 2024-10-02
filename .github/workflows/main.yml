@@ -18,45 +18,37 @@ jobs:
       with:
         fetch-depth: 0
 
-    # 2. 设置 MSBuild 环境
+    # 2. 缓存 NuGet 包
+    - name: Cache NuGet packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+
+    # 3. 设置 MSBuild 环境
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v1.0.2
 
-    # 3. 安装 NuGet 包
+    # 4. 安装 NuGet 包
     - name: Install NuGet Packages
       run: nuget restore Pillager.sln
       
-    # 4. 构建解决方案
-    - name: Build solution
-      run: msbuild -nologo -v:m -p:Configuration=${{ matrix.configuration }} Pillager.sln
+    # 5. 构建发布版本，启用修剪和单文件发布
+    - name: Build solution with trimming and single file
+      run: msbuild -nologo -v:m -p:Configuration=${{ matrix.configuration }} -p:PublishTrimmed=True -p:PublishSingleFile=True Pillager.sln
       
-    # 5. 安装 7Zip PowerShell Module（如果需要）
+    # 6. 打印发布目录内容（调试用）
+    - name: Inspect Release Directory
+      run: dir ./Pillager/bin/Release
+
+    # 7. 安装 7Zip PowerShell Module（如果需要）
     - name: Install 7Zip PowerShell Module
       shell: powershell
       run: Install-Module 7Zip4PowerShell -Force -Verbose
 
-    # 6. 安装 UPX 通过 Chocolatey
-    - name: Install UPX
-      run: choco install upx -y
-
-    # 7. 压缩 Pillager.exe 使用 UPX，添加 --force 参数，并处理失败情况
-    - name: Compress Pillager.exe with UPX
-      run: upx --best --force ./Pillager/bin/Release/Pillager.exe || echo "UPX compression failed, continuing without compression."
-
-    # 8. 验证压缩后的 Pillager.exe 是否存在
-    - name: Verify Pillager.exe Compression
-      run: |
-        if (Test-Path ./Pillager/bin/Release/Pillager.exe) {
-          Write-Host "Pillager.exe exists after compression."
-        } else {
-          Write-Error "Pillager.exe does not exist after compression."
-        }
-
-    # 9. 列出 Release 目录内容（调试用，可选）
-    - name: List Release Directory
-      run: dir ./Pillager/bin/Release
-
-    # 10. 使用 actions/upload-artifact 上传构建产物
+    # 8. 使用 actions/upload-artifact 上传构建产物
     - name: Upload Pillager.exe
       uses: actions/upload-artifact@v3
       with:
