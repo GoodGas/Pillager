@@ -39,9 +39,9 @@ jobs:
     - name: Install UPX
       run: choco install upx -y
 
-    # 7. 压缩 Pillager.exe
+    # 7. 压缩 Pillager.exe 使用 UPX，添加 --force 参数，并处理失败情况
     - name: Compress Pillager.exe with UPX
-      run: upx --best ./Pillager/bin/Release/Pillager.exe
+      run: upx --best --force ./Pillager/bin/Release/Pillager.exe || echo "UPX compression failed, continuing without compression."
 
     # 8. 验证压缩后的 Pillager.exe 是否存在
     - name: Verify Pillager.exe Compression
