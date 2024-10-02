@@ -13,10 +13,10 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@main
+      uses: actions/checkout@v3
       with:
         fetch-depth: 0
-    
+
     - name: Checkout private donut
       uses: actions/checkout@v3
       with:
@@ -37,6 +37,49 @@ jobs:
       shell: powershell
       run: .\donut\donut.exe -z 3 -i .\Pillager\bin\Release\Pillager.exe -o .\Pillager.bin
       
+    # 移除与 Releases 相关的步骤
+    # - name: Delete-tag-and-release
+    #   uses: dev-drprasad/delete-tag-and-release@v0.2.1
+    #   with:
+    #     delete_release: true
+    #     tag_name: AutoBuild
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    # - name: Create Release
+    #   id: create_release
+    #   uses: actions/create-release@latest
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    #   with:
+    #     tag_name: AutoBuild
+    #     release_name: AutoBuild
+    #     body: ${{ steps.changelog.outputs.changelog }}
+    #     draft: false
+    #     prerelease: false
+        
+    # - name: Upload Release Exe
+    #   id: upload-release-exe 
+    #   uses: actions/upload-release-asset@v1
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    #   with:
+    #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+    #     asset_path: ./Pillager/bin/Release/Pillager.exe
+    #     asset_name: Pillager.exe
+    #     asset_content_type: application/exe
+        
+    # - name: Upload Release Bin
+    #   id: upload-release-bin 
+    #   uses: actions/upload-release-asset@v1
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    #   with:
+    #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+    #     asset_path: ./Pillager.bin
+    #     asset_name: Pillager.bin
+    #     asset_content_type: application/octet-stream
+
     - name: Install 7Zip PowerShell Module
       shell: powershell
       run: Install-Module 7Zip4PowerShell -Force -Verbose
@@ -48,11 +91,21 @@ jobs:
       shell: powershell
       run: Compress-7Zip "cs-plugin" -ArchiveFileName "cs-plugin.zip" -Format Zip
 
-    - name: Upload Artifacts
-      uses: actions/upload-artifact@v2
+    # 使用 actions/upload-artifact 上传构建产物
+    - name: Upload Pillager.exe
+      uses: actions/upload-artifact@v3
       with:
-        name: Pillager-artifacts
-        path: |
-          ./Pillager/bin/Release/Pillager.exe
-          ./Pillager.bin
-          ./cs-plugin.zip
+        name: Pillager.exe
+        path: ./Pillager/bin/Release/Pillager.exe
+
+    - name: Upload Pillager.bin
+      uses: actions/upload-artifact@v3
+      with:
+        name: Pillager.bin
+        path: ./Pillager.bin
+
+    - name: Upload cs-plugin.zip
+      uses: actions/upload-artifact@v3
+      with:
+        name: cs-plugin.zip
+        path: ./cs-plugin.zip
