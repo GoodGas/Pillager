@@ -17,13 +17,6 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Checkout private donut
-      uses: actions/checkout@v3
-      with:
-        repository: qwqdanchun/donut-self
-        token: ${{ secrets.PERSONAL_TOKEN }}
-        path: donut
-
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v1.0.2
 
@@ -33,50 +26,11 @@ jobs:
     - name: Build solution
       run: msbuild -nologo -v:m -p:Configuration=${{ matrix.configuration }} Pillager.sln
       
-    - name: Build Shellcode
-      shell: powershell
-      run: .\donut\donut.exe -z 3 -i .\Pillager\bin\Release\Pillager.exe -o .\Pillager.bin
-      
-    # 添加调试步骤，查看文件是否生成
-    - name: Verify Pillager.bin Generation
-      run: |
-        if (Test-Path .\Pillager.bin) {
-          Write-Host "Pillager.bin exists."
-        } else {
-          Write-Error "Pillager.bin does not exist."
-        }
-
+    
     - name: Install 7Zip PowerShell Module
       shell: powershell
       run: Install-Module 7Zip4PowerShell -Force -Verbose
 
-    - name: Ensure cs-plugin\module Directory Exists
-      run: mkdir .\cs-plugin\module
-
-    - name: Copy Pillager.bin
-      run: copy .\Pillager.bin .\cs-plugin\module\Pillager.bin
-
-    # 添加调试步骤，查看 cs-plugin\module\Pillager.bin 是否存在
-    - name: Verify Copy Pillager.bin
-      run: |
-        if (Test-Path .\cs-plugin\module\Pillager.bin) {
-          Write-Host "Pillager.bin copied successfully."
-        } else {
-          Write-Error "Failed to copy Pillager.bin."
-        }
-
-    - name: Pack Plugin Folder
-      shell: powershell
-      run: Compress-7Zip "cs-plugin" -ArchiveFileName "cs-plugin.zip" -Format Zip
-
-    # 添加调试步骤，查看 cs-plugin.zip 是否生成
-    - name: Verify cs-plugin.zip Generation
-      run: |
-        if (Test-Path .\cs-plugin.zip) {
-          Write-Host "cs-plugin.zip exists."
-        } else {
-          Write-Error "cs-plugin.zip does not exist."
-        }
 
     # 使用 actions/upload-artifact 上传构建产物
     - name: Upload Pillager.exe
