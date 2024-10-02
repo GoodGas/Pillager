@@ -12,41 +12,53 @@ jobs:
     runs-on: windows-2019
 
     steps:
+    # 1. 检出仓库代码
     - name: Checkout
       uses: actions/checkout@v3
       with:
         fetch-depth: 0
 
+    # 2. 设置 MSBuild 环境
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v1.0.2
 
+    # 3. 安装 NuGet 包
     - name: Install NuGet Packages
       run: nuget restore Pillager.sln
       
+    # 4. 构建解决方案
     - name: Build solution
       run: msbuild -nologo -v:m -p:Configuration=${{ matrix.configuration }} Pillager.sln
       
-    
+    # 5. 安装 7Zip PowerShell Module（如果需要）
     - name: Install 7Zip PowerShell Module
       shell: powershell
       run: Install-Module 7Zip4PowerShell -Force -Verbose
 
+    # 6. 安装 UPX 通过 Chocolatey
+    - name: Install UPX
+      run: choco install upx -y
 
-    # 使用 actions/upload-artifact 上传构建产物
+    # 7. 压缩 Pillager.exe
+    - name: Compress Pillager.exe with UPX
+      run: upx --best ./Pillager/bin/Release/Pillager.exe
+
+    # 8. 验证压缩后的 Pillager.exe 是否存在
+    - name: Verify Pillager.exe Compression
+      run: |
+        if (Test-Path ./Pillager/bin/Release/Pillager.exe) {
+          Write-Host "Pillager.exe exists after compression."
+        } else {
+          Write-Error "Pillager.exe does not exist after compression."
+        }
+
+    # 9. 列出 Release 目录内容（调试用，可选）
+    - name: List Release Directory
+      run: dir ./Pillager/bin/Release
+
+    # 10. 使用 actions/upload-artifact 上传构建产物
     - name: Upload Pillager.exe
       uses: actions/upload-artifact@v3
       with:
         name: Pillager.exe
         path: ./Pillager/bin/Release/Pillager.exe
-
-    - name: Upload Pillager.bin
-      uses: actions/upload-artifact@v3
-      with:
-        name: Pillager.bin
-        path: ./Pillager.bin
-
-    - name: Upload cs-plugin.zip
-      uses: actions/upload-artifact@v3
-      with:
-        name: cs-plugin.zip
-        path: ./cs-plugin.zip
