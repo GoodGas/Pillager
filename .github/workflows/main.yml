@@ -9,7 +9,7 @@ jobs:
       matrix:
         configuration: [Release]
 
-    runs-on: windows-2019
+    runs-on: windows-2022
 
     steps:
     # 1. 检出仓库代码
